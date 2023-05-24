@@ -19,4 +19,5 @@
 організаційна робота з GitLab;
 AJAX запити (файл ajax.js);
 рефакторинг коду та виправлення
-https://github.com/grinchikk1/StepProjectCard проєкт [github pages](https://grinchikk1.github.io/StepProjectCard/)
+https://github.com/grinchikk1/StepProjectCard
+проєкт [github pages](https://grinchikk1.github.io/StepProjectCard/)
