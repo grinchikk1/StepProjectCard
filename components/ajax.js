@@ -56,7 +56,9 @@ export async function deleteCard(id) {
 }
 
 // функція логін
-export const login = async (email, password) => {
+export const login = async () => {
+  const email = "demonchikk1@gmail.com";
+  const password = "11223344";
   const response = await fetch(`${url}/login`, {
     method: "POST",
     headers: {

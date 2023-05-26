@@ -35,22 +35,46 @@ window.addEventListener("click", function (event) {
     }
 });
 
+// реєстрація
 register.addEventListener("click", async () => {
-    const { value: email } = document.querySelector("#floatingInput");
-    const { value: password } = document.querySelector("#floatingPassword");
+    const emailInput = document.querySelector("#floatingInput");
+    const passwordInput = document.querySelector("#floatingPassword");
+    const email = emailInput.value.trim();
+    const password = passwordInput.value.trim();
 
-    if (email && password) {
-        const response = await login(email, password);
-        localStorage.setItem("authToken", JSON.stringify(response));
-        document.querySelector("#floatingInput").value = "";
-        document.querySelector("#floatingPassword").value = "";
-        modalReg.style.display = "none";
-        btn.style.display = "none";
-        addVisit.style.display = "block";
-        alert("Успішна операція");
-    } else {
+    // Перевірка наявності введених даних
+    if (!email || !password) {
         alert("Заповніть всі поля!");
+        return;
     }
+
+    // Перевірка формату електронної пошти
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        alert("Введіть коректну електронну пошту!");
+        return;
+    }
+
+    // Перевірка довжини пароля
+    if (password.length < 8) {
+        alert("Пароль повинен містити не менше 8 символів!");
+        return;
+    }
+
+    const response = await login();
+    localStorage.setItem("authToken", JSON.stringify(response));
+    localStorage.setItem("email", JSON.stringify(email));
+    localStorage.setItem("password", JSON.stringify(password));
+    emailInput.value = "";
+    passwordInput.value = "";
+    modalReg.style.display = "none";
+    btn.style.display = "none";
+    addVisit.style.display = "block";
+    alert("Успішна операція");
+    const allCards = await getAllCards(); // отримати всі картки з сервера
+    allCardsLocal = allCards;
+    displayCards(allCardsLocal); // відобразити всі картки
+    searchBtn.classList.remove("hidden");
 });
 
 createBtn.addEventListener("click", posts);
@@ -176,13 +200,17 @@ async function displayCards(cards) {
         button.addEventListener("click", async () => {
             const cardId = button.dataset.cardId;
             await deleteCard(cardId);
-            await displayCards(allCardsLocal);
+
+            // Видалення картки з allCardsLocal
             const index = allCardsLocal.findIndex(
                 (card) => card.id === Number(cardId)
             );
             if (index !== -1) {
                 allCardsLocal.splice(index, 1);
             }
+
+            await displayCards(allCardsLocal);
+
             button.parentElement.remove();
             if (cards.length === 0) {
                 container.innerHTML =
@@ -245,16 +273,23 @@ async function displayCards(cards) {
 // функція авторизації
 async function authenticateUser() {
     const savedToken = JSON.parse(localStorage.getItem("authToken"));
-    if (savedToken) {
+    const savedEmail = JSON.parse(localStorage.getItem("email"));
+    const savedPassword = JSON.parse(localStorage.getItem("password"));
+    const emailInput = document.querySelector("#floatingInput");
+    const passwordInput = document.querySelector("#floatingPassword");
+    const email = emailInput.value.trim();
+    const password = passwordInput.value.trim();
+
+    if (savedToken && email === savedEmail && password === savedPassword) {
         modalReg.style.display = "none";
         btn.style.display = "none";
         addVisit.style.display = "block";
         const allCards = await getAllCards(); // отримати всі картки з сервера
         allCardsLocal = allCards;
-        displayCards(allCards); // відобразити всі картки
+        displayCards(allCardsLocal); // відобразити всі картки
         searchBtn.classList.remove("hidden");
     } else {
-        alert("Ви не зареєстровані");
+        alert("Ви не зареєстровані або не вірно введені дані");
     }
 }
 
@@ -286,7 +321,7 @@ function filters(arr) {
     const filtered = arr.filter((item) => {
         if (
             item["терміновість"] === urgencyField &&
-            item.doctorType.toLowerCase().startsWith(searchValue) &&
+            item.doctorType.toLowerCase().includes(searchValue) &&
             item["статус"] === statusField
         ) {
             return item;
